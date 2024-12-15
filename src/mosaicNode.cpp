@@ -1,5 +1,11 @@
 #include "mosaicNode.h"
+
+#ifdef TRACY_ENABLE
 #include "Tracy.hpp"
+#else
+// Dummies
+#define ZoneScopedN(X)
+#endif
 #include "ImHelpers.h"
 
 //--------------------------------------------------------------

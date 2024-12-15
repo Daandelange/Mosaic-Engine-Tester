@@ -530,11 +530,12 @@ bool ImGuiEx::NodeCanvas::BeginNode( const char* _id, std::string _name, ImVec2&
 
     // The combination of a cliprect and columns allows us to set a clipping space for node widgets while reserving drawable space for pins, without having to add an extra window / childframe.
     ImGui::PushClipRect( curNodeData.leftPins.region.Min, curNodeData.rightPins.region.Max, true); // Inner space + Node Spaces
+    // Todo: switch columns api to new tables API !
     ImGui::BeginColumns("innerNode", 3,
-                        ImGuiColumnsFlags_NoBorder
-                        | ImGuiColumnsFlags_NoResize
-                        //| ImGuiColumnsFlags_NoPreserveWidths
-                        | ImGuiColumnsFlags_NoForceWithinWindow // important so there's no weird auto adjustments.
+                        ImGuiOldColumnFlags_NoBorder
+                        | ImGuiOldColumnFlags_NoResize
+                        //| ImGuiOldColumnFlags_NoPreserveWidths
+                        | ImGuiOldColumnFlags_NoForceWithinWindow // important so there's no weird auto adjustments.
                         );
     // Column layout
     ImGui::SetColumnOffset(0,0);
@@ -1362,6 +1363,7 @@ void ImGuiEx::NodeCanvas::EndNodeMenu(){
 }
 
 // For drawing content to the node
+// Only call BeginNodeContent() when this returned true
 bool ImGuiEx::NodeCanvas::BeginNodeContent( const ImGuiExNodeView& _renderingView ){
     // Check ImGui Callstack
     IM_ASSERT(isDrawingCanvas == true); // Please Call between Begin() and End()

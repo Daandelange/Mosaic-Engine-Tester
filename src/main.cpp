@@ -2,6 +2,7 @@
 #include "ofApp.h"
 
 //#ifdef MOSAIC_ENABLE_PROFILING
+#ifdef TRACY_ENABLE
 #include <Tracy.hpp>
 #include <memory>
 
@@ -17,11 +18,13 @@ void operator delete(void* ptr) noexcept
     TracyFree(ptr);
     free(ptr);
 }
+#endif
 
 //========================================================================
 int main( ){
-
+#ifdef TRACY_ENABLE
     ZoneScopedN("main()");
+#endif
     ofSetupOpenGL(1024,768,OF_WINDOW);			// <-------- setup the GL context
 
     // this kicks off the running of my app

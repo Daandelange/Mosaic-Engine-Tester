@@ -5,6 +5,8 @@
  * Modified by n3m3da
  *
  */
+
+
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
@@ -107,7 +109,11 @@ PlotStatus Plot(const char* label, const PlotConfig& conf) {
     ImGui::ItemSize(total_bb, style.FramePadding.y);
     if (!ImGui::ItemAdd(total_bb, 0, &frame_bb))
         return status;
+#if IMGUI_VERSION_NUM >= 18910
+    const bool hovered = ImGui::ItemHoverable(frame_bb, id,ImGuiHoveredFlags_None);
+#else
     const bool hovered = ImGui::ItemHoverable(frame_bb, id);
+#endif
 
     ImGui::RenderFrame(
                 frame_bb.Min,
@@ -260,7 +266,7 @@ PlotStatus Plot(const char* label, const PlotConfig& conf) {
                     uint32_t end = start;
                     if (conf.selection.sanitize_fn)
                         end = conf.selection.sanitize_fn(end - start) + start;
-                    if (end < conf.values.offset + conf.values.count) {
+                    if (static_cast<int>(end) < conf.values.offset + conf.values.count) {
                         *conf.selection.start = start;
                         *conf.selection.length = end - start;
                         status = PlotStatus::selection_updated;
@@ -276,7 +282,7 @@ PlotStatus Plot(const char* label, const PlotConfig& conf) {
                     if (end > start) {
                         if (conf.selection.sanitize_fn)
                             end = conf.selection.sanitize_fn(end - start) + start;
-                        if (end < conf.values.offset + conf.values.count) {
+                        if (static_cast<int>(end) < conf.values.offset + conf.values.count) {
                             *conf.selection.length = end - start;
                             status = PlotStatus::selection_updated;
                         }
@@ -317,7 +323,7 @@ PlotStatus PlotVar(const char* label, const PlotVarConfig& conf, ImU32 color) {
     PlotVarData& pvd = g_PlotVarsMap[id];
 
     // Setup
-    if (pvd.Data.capacity() != conf.buffer_size)
+    if (pvd.Data.capacity() != static_cast<int>(conf.buffer_size))
     {
         pvd.Data.resize(conf.buffer_size);
         memset(&pvd.Data[0], 0, sizeof(float) * conf.buffer_size);
@@ -326,7 +332,7 @@ PlotStatus PlotVar(const char* label, const PlotVarConfig& conf, ImU32 color) {
     }
 
     // Insert (avoid unnecessary modulo operator)
-    if (pvd.DataInsertIdx == conf.buffer_size)
+    if (pvd.DataInsertIdx == static_cast<int>(conf.buffer_size))
         pvd.DataInsertIdx = 0;
     //int display_idx = pvd.DataInsertIdx;
     if (conf.value != FLT_MAX)
@@ -334,15 +340,10 @@ PlotStatus PlotVar(const char* label, const PlotVarConfig& conf, ImU32 color) {
 
     // Draw
     int current_frame = ImGui::GetFrameCount();
-    if (pvd.LastFrame != current_frame)
-    {
-        //char overlay[32];
-        //sprintf(overlay, "%-3.4f", pvd.Data[display_idx]);
+    if (pvd.LastFrame != current_frame){
         ImGui::PushStyleColor(ImGuiCol_PlotLines, color);
         ImGui::PlotLines("##plot", &pvd.Data[0], conf.buffer_size, pvd.DataInsertIdx, NULL, conf.scale.min, conf.scale.max, ImVec2(conf.frame_size.x, conf.frame_size.y));
         ImGui::PopStyleColor(1);
-        //ImGui::SameLine();
-        //ImGui::Text("%s\n%-3.4f", label, pvd.Data[display_idx]);	// Display last value in buffer
         pvd.LastFrame = current_frame;
 
         status = PlotStatus::selection_updated;
@@ -356,30 +357,51 @@ PlotStatus PlotVar(const char* label, const PlotVarConfig& conf, ImU32 color) {
     return status;
 }
 
-void VUMeter(ImDrawList* drawList, float width, float height,float _vol){
+void VUMeter(ImDrawList* drawList, float width, float height,float _vol, bool horizontal){
 
     // visuals
     enum { SUBDIVISIONS = 14 };
 
     ImGuiWindow* Window = ImGui::GetCurrentWindow();
 
-    // prepare canvas
-    const float dim = width > 0 ? width : ImGui::GetContentRegionAvail().x;
-    ImVec2 Canvas(dim, height);
-
-    ImRect bb(Window->DC.CursorPos, Window->DC.CursorPos + Canvas);
-    ImGui::ItemSize(bb);
-
     int numRect = static_cast<int>(floor(imMap(_vol,0.0f,1.0f,0,SUBDIVISIONS)));
 
-    if(Canvas.x >= SUBDIVISIONS){
-        for(int i=0;i<numRect;i++){
-            if(i < 10){
-                drawList->AddRectFilled(ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i), bb.Min.y),ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i) + ((Canvas.x / SUBDIVISIONS)-2), bb.Max.y - 1),IM_COL32(64,255,1,220));
-            }else if(i >= 10 && i < 12){
-                drawList->AddRectFilled(ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i), bb.Min.y),ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i) + ((Canvas.x / SUBDIVISIONS)-2), bb.Max.y - 1),IM_COL32(255,254,65,220));
-            }else if(i >= 12 && i < 14){
-                drawList->AddRectFilled(ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i), bb.Min.y),ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i) + ((Canvas.x / SUBDIVISIONS)-2), bb.Max.y - 1),IM_COL32(255,64,1,220));
+    if(horizontal){
+        // prepare canvas
+        const float dim = width > 0 ? width : ImGui::GetContentRegionAvail().x;
+        ImVec2 Canvas(dim, height);
+
+        ImRect bb(Window->DC.CursorPos, Window->DC.CursorPos + Canvas);
+        ImGui::ItemSize(bb);
+
+        if(Canvas.x >= SUBDIVISIONS){
+            for(int i=0;i<numRect;i++){
+                if(i < 10){
+                    drawList->AddRectFilled(ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i), bb.Min.y),ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i) + ((Canvas.x / SUBDIVISIONS)-2), bb.Max.y - 1),IM_COL32(64,255,1,220));
+                }else if(i >= 10 && i < 12){
+                    drawList->AddRectFilled(ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i), bb.Min.y),ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i) + ((Canvas.x / SUBDIVISIONS)-2), bb.Max.y - 1),IM_COL32(255,254,65,220));
+                }else if(i >= 12 && i < 14){
+                    drawList->AddRectFilled(ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i), bb.Min.y),ImVec2(bb.Min.x + ((Canvas.x / SUBDIVISIONS)*i) + ((Canvas.x / SUBDIVISIONS)-2), bb.Max.y - 1),IM_COL32(255,64,1,220));
+                }
+            }
+        }
+    }else{
+        // prepare canvas
+        const float dim = height > 0 ? height : ImGui::GetContentRegionAvail().y;
+        ImVec2 Canvas(width, dim);
+
+        ImRect bb(Window->DC.CursorPos, Window->DC.CursorPos + Canvas);
+        ImGui::ItemSize(bb);
+
+        if(Canvas.y >= SUBDIVISIONS){
+            for(int i=0;i<numRect;i++){
+                if(i < 10){
+                    drawList->AddRectFilled(ImVec2(bb.Min.x, bb.Max.y - ((Canvas.y / SUBDIVISIONS)*i)),ImVec2(bb.Max.x - 1, bb.Max.y - ((Canvas.y / SUBDIVISIONS)*i) - ((Canvas.y / SUBDIVISIONS)-2)),IM_COL32(64,255,1,220));
+                }else if(i >= 10 && i < 12){
+                    drawList->AddRectFilled(ImVec2(bb.Min.x, bb.Max.y - ((Canvas.y / SUBDIVISIONS)*i)),ImVec2(bb.Max.x - 1, bb.Max.y - ((Canvas.y / SUBDIVISIONS)*i) - ((Canvas.y / SUBDIVISIONS)-2)),IM_COL32(255,254,65,220));
+                }else if(i >= 12 && i < 14){
+                    drawList->AddRectFilled(ImVec2(bb.Min.x, bb.Max.y - ((Canvas.y / SUBDIVISIONS)*i)),ImVec2(bb.Max.x - 1, bb.Max.y - ((Canvas.y / SUBDIVISIONS)*i) - ((Canvas.y / SUBDIVISIONS)-2)),IM_COL32(255,64,1,220));
+                }
             }
         }
     }
@@ -399,8 +421,8 @@ void PlotBands(ImDrawList* drawList, float width, float height, std::vector<floa
 
     float bin_w = Canvas.x / data->size();
 
-    for(int i=0;i<data->size();i++){
-        drawList->AddRect(ImVec2( bb.Min.x + (bin_w*i), bb.Min.y+(Canvas.y*(max-data->at(i)) )),ImVec2(bb.Min.x + (bin_w*i) + bin_w, bb.Max.y),color);
+    for(unsigned int i=0;i<data->size();i++){
+        drawList->AddRect(ImVec2( bb.Min.x + (bin_w*i), bb.Min.y+(Canvas.y*(max-data->at(i)) )),ImVec2(bb.Min.x + (bin_w*i) + bin_w, bb.Max.y),color,0,0,1);
     }
 
 }

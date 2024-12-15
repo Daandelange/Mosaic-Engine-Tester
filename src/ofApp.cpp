@@ -1,6 +1,15 @@
 #include "ofApp.h"
-#include <Tracy.hpp>
 
+#ifdef TRACY_ENABLE
+#include <Tracy.hpp>
+#else
+// Dummies
+#define ZoneScopedN(X)
+#define TracyPlotConfig(X,Y)
+#define TracyPlot(X,Y)
+#define FrameMark
+#define TracyAppInfo(X,Y)
+#endif
 
 //--------------------------------------------------------------
 void ofApp::setup(){

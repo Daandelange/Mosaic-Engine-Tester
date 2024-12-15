@@ -302,7 +302,7 @@ inline constexpr const char* getLinkName(const LinkType& _linkType){
 //)(X)
 
 // Constexpr utilities, with optimisation compile flags (-O3), this should be as fast as a switch statement
-template<constexpr const int I=LinkTypeIterator::numKeys-1>
+template<const int I=LinkTypeIterator::numKeys-1>
 inline constexpr const char* getLinkName(const LinkType& _linkType){
     // A bit tricky, a kind of recursive switch, for each enum, array search
     return ( LinkTypeIterator::getEnumByIndex(I) ==_linkType)?ofxVPLinkTypeInfo< LinkTypeIterator::getEnumByIndex(I) >::linkName : getLinkName<(I-1)>( _linkType );//
