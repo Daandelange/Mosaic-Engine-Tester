@@ -191,6 +191,20 @@ void mosaicNode::drawObjectNodeGui( ImGuiEx::NodeCanvas& _nodeCanvas ){
 
     if(_nodeCanvas.BeginNode( this->getUID().c_str(), this->getDisplayName(), imPos, imSize, this->getNumInlets(), this->getNumOutlets(), this->getIsResizable(), this->getIsTextureObject() )){
 
+        if( _nodeCanvas.BeginNodeContent(ImGuiExNodeView_Info) ){
+            ImGui::Button("Node Button22", ImVec2(-1,20));
+            _nodeCanvas.EndNodeContent();
+        }
+        else if( _nodeCanvas.BeginNodeContent() ){
+            ImGui::Text("Cur View : %d", _nodeCanvas.GetNodeData().viewName );
+            _nodeCanvas.EndNodeContent();
+        }
+
+        if(_nodeCanvas.BeginNodeMenu()){
+            ImGui::MenuItem("Menu From User code !");
+            _nodeCanvas.EndNodeMenu();
+        }
+        
         // Check menu state
         if( _nodeCanvas.doNodeMenuAction(ImGuiExNodeMenuActionFlags_DeleteNode) ){
             // ...

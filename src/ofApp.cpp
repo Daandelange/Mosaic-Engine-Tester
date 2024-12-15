@@ -133,6 +133,8 @@ void ofApp::draw(){
     // Close canvas
     if ( isCanvasVisible ) nodeCanvas.End();
 
+    ImGui::ShowMetricsWindow(); // tmp!
+
     // We're done drawing to IMGUI
     this->gui.end();
 

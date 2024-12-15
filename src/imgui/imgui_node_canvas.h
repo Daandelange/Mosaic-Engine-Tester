@@ -73,6 +73,7 @@
 # define IMGUI_EX_NODE_HOVER_DISTANCE 7
 # define IMGUI_EX_NODE_LINK_LINE_SEGMENTS_PER_LENGTH 0.1
 # define IMGUI_EX_NODE_LINK_THICKNESS 3
+# define IMGUI_EX_ENABLE_TABS 1 // Enables tabs (different views)
 
 // Other defines
 # define IMGUI_EX_NODE_MENU_ID "nodeMenu"
